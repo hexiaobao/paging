@@ -5,13 +5,9 @@
 			pageSize:10,//默认每页显示条数
 			count:0,//默认数据总条数
 			showNum:6,//默认显示页码数
-			activeBackColor:'#5cb85c',//默认选中页码的背景色
 			jumpTo:true,//默认显示跳转指定页模块
 			jumpBtnName:'确定',//默认跳转按钮的名称
-			color:'#fff',//默认字体颜色
-			backColor:'#EFF2F7',//未被选中的页码的背景色
-			disabledColor:'#fff',//disabled的的背景色
-			disabledBorColor:'#ddd',//disabled的的边框色
+			fontSize:16,//跳转按钮字体大小
 		}；
 		var self = this;
 		var pagingCount = 0;//共计页码
@@ -34,7 +30,11 @@
 				pageCount = parseInt( count / pageSize ) + 1;
 			}
 			var showNum = parseInt( settings.showNum );
-		}
+			var pageJson = JsonPageConstruct(pageNo,pageCount,pageSize,showNum);
+			PagingJson(pageJson);
+			$(that).off();
+		};
+		main();
 
 		var checkDigit = function () {/*校验数据条数count,每页显示条数pageSize,当前页pageNo,
 			显示页码数showNum是否非法输入*/
@@ -69,34 +69,114 @@
 				1、pageNo <= showNum + 2;
 				2、showNum + 2 < pageNo <= pageCount - showNum + 3;
 				3、pageCount - showNum + 3 < pageNo <= pageCount;
-				在1的情况下有分为两种情况：
+				在1的情况下又分为两种情况：
 				（1）、pageNo <= showNum;
-				（1）、showNum < pageNo <= showNum + 2;
+				（2）、showNum < pageNo <= showNum + 2;
+				在（2）中情况下面要考虑
 			*/
 			if( pageCount > showNum ) {
 				if( pageNo <= showNum + 2 ) {
 					if( pageNo <= showNum ) {
-						for(var i= 1 ;i <= showNum ; i ++ ){
+						for(var i= 1 ;i <= showNum ; i++ ){
 							if( pageNo == i ) {
-								data += '{"text":"'+i+'","num":"'+i+'","state":"avtive"},';
+								data += '{"text":"'+ i +'","num":"'+ i +'","state":"avtive"},';
 							}
 							else{
-								data += '{"text":"'+i+'","num":"'+i+'","state":"abled"},';
+								data += '{"text":"'+ i +'","num":"'+ i +'","state":"abled"},';
 							}
 						}
 						if( pageNo == showNum ) {
 						//显示页面后面在刷新出一个，
 						//此时i = showNum + 1,这边之所以能够访问到i，是因为js在声明变量
 						//的时候提升申明了，提升到最前面声明
-							data += '{"text":"'+i+'","num":"'+i+'","state":"abled"},';
+							data += '{"text":"'+ i +'","num":"'+ i +'","state":"abled"},';
 						}
 					}
 					else{
-						
+						for (var j = 1; j <= pageNo; j++) {
+							if( pageNo == j ) {
+								data += '{"text":"'+ j +'","num":"'+ j +'","state":"avtive"},';
+							}
+							else{
+								data += '{"text":"'+ j +'","num":"'+ j +'","state":"abled"},';
+							}
+						}
+						if(pageNo != pageCount){
+							data += '{"text":"'+ j +'","num":"'+ j +'","state":"abled"},';
+						}
+					}
+					//如果总页数pageCount <= showNum + 2,则隐藏...
+					if(pageNo != pageCount){
+						if(pageNo != (pageCount - 1)){
+							data+=',{"text":"...","num":"more","status":"disabled"}';
+						}
+					}
+				}
+				else if(pageNo <= pageCount - showNum + 3){
+					data += '{"text":"1","num":"1","state":"abled"},';
+					data += '{"text":"2","num":"2","state":"abled"},';
+					data += '{"text":"...","num":"more","state":"disabled"},';
+					for (var m = pageCount - showNum - 2; m < pageCount - showNum + 2; m++) {
+						if(pageNo == m){
+							data += '{"text":"'+ m +'","num":"'+ m +'","state":"avtive"},';
+						}
+						else{
+							data += '{"text":"'+ m +'","num":"'+ m +'","state":"abled"},';
+						}
+					}
+					data += '{"text":"...","num":"more","state":"disabled"},';
+				}
+				else{
+					data += '{"text":"1","num":"1","state":"abled"},';
+					data += '{"text":"2","num":"2","state":"abled"},';
+					data += '{"text":"...","num":"more","state":"disabled"},';
+					for (var n = pageCount - showNum + 1; n < pageCount; n++) {
+						if(pageNo == n){
+							data += '{"text":"'+ n +'","num":"'+ n +'","state":"avtive"},';
+						}
+						else{
+							data += '{"text":"'+ n +'","num":"'+ n +'","state":"abled"},';
+						}
 					}
 				}
 			}
+			if(pageNo == pageCount){
+				data+='{"text":"下一页","num":"'+ (pageNo+1) +'","status":"disabled"}]}';
+			}else{
+				data+='{"text":"下一页","num":"'+ (pageNo+1) +'","status":"abled"}]}';
+			}
+			var json_return = JSON.parse(data);
+			return json_return;
 		}
 		
-	}
+
+		/*
+			将分页结果显示到页面的相应的位置
+		*/
+		function PagingJson(json){
+			
+			if(parseInt(Settings.count)>0){
+				var html = '<ul class="pagination">';
+				for(var i in json.jsonData){
+					if(json.jsonData[i].state == "disabled"){
+						html +='<li id="pageNum'+ json.jsonData[i].num +'" class="'+ json.jsonData[i].state +'" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
+					}
+					else if(json.jsonData[i].state == "active"){
+						html +='<li id="pageNum'+ json.jsonData[i].num +'" class="'+ json.jsonData[i].state +'" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
+						
+					}else if(json.jsonData[i].num == "more"){
+						html +='<li id="pageNum'+ json.jsonData[i].num +'" class="disabled" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
+					}else{
+						html +='<li id="pageNum'+ json.jsonData[i].num +'" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
+					}
+				}
+				$(that).html(html);
+				if(Settings.jumpTo == true){
+					$(that).find(".pagination").append('<span class="text-muted" style="margin:5px;margin-left:10px;display:inline-block;font-size:18px;font-size:'+ Settings.fontSize +'px">共有'+ pageCount +'页/'+ Settings.count +'个</span><div style="display:inline-block" name="changePage"><span class="text-muted" style="margin:5px;margin-left:0px;display:inline-block;font-size:'+ Settings.fontSize +'px">,到第</span> <input type="number" min="1" max="'+ pageCount +'"class="pagination_change_page" style="width:45px;border-color:#ddd"> <span class="text-muted" style="margin:5px;margin-left:10px;display:inline-block;font-size:font-size:'+ Settings.fontSize +'px">页</span> <button class="btn btn-default btn-sm pagination_search">'+ Settings.jumpBtnName +'</button></div>');
+				}
+			}else{
+
+			}
+		}
+	};
 })(jQuery)
