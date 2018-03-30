@@ -1,4 +1,5 @@
 
+
 .nav-stacked > li + li {
     margin-top: 1px;
 }
@@ -80,6 +81,26 @@
     position: relative;
     text-decoration: none;
     color: #535351;
+}
+
+.pagination>.disabled>a{
+    color: #999;
+    background-color: #fff;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+.pagination>.disabled>a:hover{
+    color: #999;
+    background-color: #fff;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+.pagination > li.active > a{
+    background-color: #5cb85c;
+    border-color: #5cb85c;
+    color: #fff;
 }
 
 .pagination > li > a:hover,

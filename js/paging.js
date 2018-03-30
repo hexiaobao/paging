@@ -8,33 +8,13 @@
 			jumpTo:true,//默认显示跳转指定页模块
 			jumpBtnName:'确定',//默认跳转按钮的名称
 			fontSize:16,//跳转按钮字体大小
-		}；
+		};
+
 		var self = this;
 		var pagingCount = 0;//共计页码
 		var Settings = $.extend( {}, defaultOptions, option );/*将defaultOptions对象和option
 			随想相应的属性合并，并将新的对象赋值给Setting对象本身*/
 		$(this).empty();//清空当前$作用域
-
-		var main = function () {//主函数
-			var check = checkDigit();
-			if( check == false ){
-				return false;
-			}
-			var pageNo = parseInt( Settings.pageNo );
-			var pageSize = parseInt( Settings.pageSize );
-			var count = parseInt( Settings.count );
-			if( count % pageSize == 0){
-				pageCount = count / pageSize;
-			}
-			else{
-				pageCount = parseInt( count / pageSize ) + 1;
-			}
-			var showNum = parseInt( settings.showNum );
-			var pageJson = JsonPageConstruct(pageNo,pageCount,pageSize,showNum);
-			PagingJson(pageJson);
-			$(that).off();
-		};
-		main();
 
 		var checkDigit = function () {/*校验数据条数count,每页显示条数pageSize,当前页pageNo,
 			显示页码数showNum是否非法输入*/
@@ -42,9 +22,10 @@
 				console.error( "请检查 pagNo,pageSize,count这个三个参数是否存在非法输入" );
 				return false;
 			}
-			//如果showNum为为非法数值，那么设置为默认值
+			//如果showNum为非法数值，那么设置为默认值
 			if( Settings.showNum < 0 ){
 				Setting.showNum = 6;
+				return true;
 			}
 		}
 
@@ -56,11 +37,11 @@
 		//showNum显示几条页码在页面上
 			var data = '';
 			if(pageNo == 1){
-				data = '{jsonData:[{"text":"上一页","num":0,"state":"disabled"},';
+				data = '{"jsonData":[{"text":"上一页","num":0,"state":"disabled"},';
 			}
 			else{
-				data = '{jsonData:[{"text":"上一页","num":"'+ ( pageNo - 1 ) +'",'+
-				'"state":"disabled"},';
+				data = '{"jsonData":[{"text":"上一页","num":"'+ ( pageNo - 1 ) +'",'+
+				'"state":"abled"},';
 			}
 			/*
 				判断分页类型，有两种情况，第一：pageCount > showNum；第二：pageCount <= 
@@ -79,7 +60,7 @@
 					if( pageNo <= showNum ) {
 						for(var i= 1 ;i <= showNum ; i++ ){
 							if( pageNo == i ) {
-								data += '{"text":"'+ i +'","num":"'+ i +'","state":"avtive"},';
+								data += '{"text":"'+ i +'","num":"'+ i +'","state":"active"},';
 							}
 							else{
 								data += '{"text":"'+ i +'","num":"'+ i +'","state":"abled"},';
@@ -95,7 +76,7 @@
 					else{
 						for (var j = 1; j <= pageNo; j++) {
 							if( pageNo == j ) {
-								data += '{"text":"'+ j +'","num":"'+ j +'","state":"avtive"},';
+								data += '{"text":"'+ j +'","num":"'+ j +'","state":"active"},';
 							}
 							else{
 								data += '{"text":"'+ j +'","num":"'+ j +'","state":"abled"},';
@@ -108,7 +89,7 @@
 					//如果总页数pageCount <= showNum + 2,则隐藏...
 					if(pageNo != pageCount){
 						if(pageNo != (pageCount - 1)){
-							data+=',{"text":"...","num":"more","status":"disabled"}';
+							data+='{"text":"...","num":"more","state":"disabled"},';
 						}
 					}
 				}
@@ -116,9 +97,9 @@
 					data += '{"text":"1","num":"1","state":"abled"},';
 					data += '{"text":"2","num":"2","state":"abled"},';
 					data += '{"text":"...","num":"more","state":"disabled"},';
-					for (var m = pageCount - showNum - 2; m < pageCount - showNum + 2; m++) {
+					for (var m = pageNo - 2; m <= pageNo + 2; m++) {
 						if(pageNo == m){
-							data += '{"text":"'+ m +'","num":"'+ m +'","state":"avtive"},';
+							data += '{"text":"'+ m +'","num":"'+ m +'","state":"active"},';
 						}
 						else{
 							data += '{"text":"'+ m +'","num":"'+ m +'","state":"abled"},';
@@ -130,9 +111,9 @@
 					data += '{"text":"1","num":"1","state":"abled"},';
 					data += '{"text":"2","num":"2","state":"abled"},';
 					data += '{"text":"...","num":"more","state":"disabled"},';
-					for (var n = pageCount - showNum + 1; n < pageCount; n++) {
+					for (var n = pageCount - showNum + 1; n <= pageCount; n++) {
 						if(pageNo == n){
-							data += '{"text":"'+ n +'","num":"'+ n +'","state":"avtive"},';
+							data += '{"text":"'+ n +'","num":"'+ n +'","state":"active"},';
 						}
 						else{
 							data += '{"text":"'+ n +'","num":"'+ n +'","state":"abled"},';
@@ -141,14 +122,13 @@
 				}
 			}
 			if(pageNo == pageCount){
-				data+='{"text":"下一页","num":"'+ (pageNo+1) +'","status":"disabled"}]}';
+				data += '{"text":"下一页","num":"'+ (pageNo + 1) +'","state":"disabled"}]}';
 			}else{
-				data+='{"text":"下一页","num":"'+ (pageNo+1) +'","status":"abled"}]}';
+				data += '{"text":"下一页","num":"'+ (pageNo + 1) +'","state":"abled"}]}';
 			}
 			var json_return = JSON.parse(data);
 			return json_return;
 		}
-		
 
 		/*
 			将分页结果显示到页面的相应的位置
@@ -156,27 +136,51 @@
 		function PagingJson(json){
 			
 			if(parseInt(Settings.count)>0){
-				var html = '<ul class="pagination">';
-				for(var i in json.jsonData){
-					if(json.jsonData[i].state == "disabled"){
-						html +='<li id="pageNum'+ json.jsonData[i].num +'" class="'+ json.jsonData[i].state +'" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
+				var html = '<ul class="pagination" style="display:flex;list-style:none;">';
+				for(var a in json.jsonData){
+					if(json.jsonData[a].state == "disabled"){
+						html +='<li id="pageNum'+ json.jsonData[a].num +'" class="disabled" num="'+ json.jsonData[a].num +'" ><a href="javascript:;">'+ json.jsonData[a].text +'</a></li>';
 					}
-					else if(json.jsonData[i].state == "active"){
-						html +='<li id="pageNum'+ json.jsonData[i].num +'" class="'+ json.jsonData[i].state +'" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
+					else if(json.jsonData[a].state == "active"){
+						html +='<li id="pageNum'+ json.jsonData[a].num +'" class="active" num="'+ json.jsonData[a].num +'" ><a href="javascript:;">'+ json.jsonData[a].text +'</a></li>';
 						
-					}else if(json.jsonData[i].num == "more"){
-						html +='<li id="pageNum'+ json.jsonData[i].num +'" class="disabled" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
 					}else{
-						html +='<li id="pageNum'+ json.jsonData[i].num +'" num="'+ json.jsonData[i].num +'" ><a href="javascript:;">'+ json.jsonData[i].text +'</a></li>';
+						html +='<li id="pageNum'+ json.jsonData[a].num +'" num="'+ json.jsonData[a].num +'" ><a href="javascript:;">'+ json.jsonData[a].text +'</a></li>';
 					}
 				}
-				$(that).html(html);
+				$(self).html(html);
 				if(Settings.jumpTo == true){
-					$(that).find(".pagination").append('<span class="text-muted" style="margin:5px;margin-left:10px;display:inline-block;font-size:18px;font-size:'+ Settings.fontSize +'px">共有'+ pageCount +'页/'+ Settings.count +'个</span><div style="display:inline-block" name="changePage"><span class="text-muted" style="margin:5px;margin-left:0px;display:inline-block;font-size:'+ Settings.fontSize +'px">,到第</span> <input type="number" min="1" max="'+ pageCount +'"class="pagination_change_page" style="width:45px;border-color:#ddd"> <span class="text-muted" style="margin:5px;margin-left:10px;display:inline-block;font-size:font-size:'+ Settings.fontSize +'px">页</span> <button class="btn btn-default btn-sm pagination_search">'+ Settings.jumpBtnName +'</button></div>');
+					$(self).find(".pagination").append('<span class="text-muted" style="margin:5px;margin-left:10px;display:inline-block;font-size:18px;font-size:'+ Settings.fontSize +'px">共有'+ pagingCount +'页/'+ Settings.count +'个</span><div style="display:inline-block" name="changePage"><span class="text-muted" style="margin:5px;margin-left:0px;display:inline-block;font-size:'+ Settings.fontSize +'px">,到第</span> <input type="number" min="1" max="'+ pagingCount +'"class="pagination_change_page" style="width:45px;border-color:#ddd"> <span class="text-muted" style="margin:5px;margin-left:10px;display:inline-block;font-size:font-size:'+ Settings.fontSize +'px">页</span> <button class="btn btn-default btn-sm pagination_search">'+ Settings.jumpBtnName +'</button></div>');
 				}
 			}else{
 
 			}
 		}
+
+
+		
+
+		var main = function () {//主函数
+			var check = checkDigit();
+			if( check == false ){
+				return false;
+			}
+			var pageNo = parseInt( Settings.pageNo );
+			var pageSize = parseInt( Settings.pageSize );
+			var count = parseInt( Settings.count );
+			if( count % pageSize == 0){
+				pagingCount = count / pageSize;
+			}
+			else{
+				pagingCount = parseInt( count / pageSize ) + 1;
+			}
+			var showNum = parseInt( Settings.showNum );
+			var pageJson = JsonPageConstruct(pageNo,pagingCount,pageSize,showNum);
+			PagingJson(pageJson);
+			$(self).off();
+		};
+		main();
+
+		
 	};
 })(jQuery)
