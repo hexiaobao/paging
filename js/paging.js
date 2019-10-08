@@ -14,7 +14,7 @@
 		var pagingCount = 0;//共计页码
 		var Settings = $.extend( {}, defaultOptions, option );/*将defaultOptions对象和option
 			随想相应的属性合并，并将新的对象赋值给Setting对象本身*/
-		$(this).empty();//清空当前$作用域
+		$(this).empty();//清空当前DOM节点下面的所有子节点 # $('a').empty() 清空a下面所有的子节点
 
 		var checkDigit = function () {/*校验数据条数count,每页显示条数pageSize,当前页pageNo,
 			显示页码数showNum是否非法输入*/
